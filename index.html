@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HalıSaha Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080f0a;--card:#0e1e12;--card2:#0a1a0d;
+  --g1:#1e6b2a;--g2:#246b31;
+  --line:rgba(255,255,255,0.82);
+  --gold:#f0b429;--acc:#4ade80;--muted:#5a8a65;--text:#e4f0e7;
+  --border:rgba(255,255,255,0.07);--red:#ef4444;--blue:#38bdf8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+nav{
+  background:rgba(5,12,7,0.97);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 18px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;
+}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--acc);display:flex;align-items:center;gap:6px}
+.logo em{color:var(--gold);font-style:normal}
+.nav-tabs{display:flex;gap:2px}
+.ntab{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:5px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s}
+.ntab.active,.ntab:hover{background:var(--g1);color:#fff}
+.admin-row{display:flex;align-items:center;gap:7px}
+.apill{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;background:var(--gold);color:#000;padding:4px 10px;border-radius:4px;cursor:pointer;border:none}
+.adot{width:7px;height:7px;border-radius:50%;background:#ef4444;transition:background .3s}
+.adot.on{background:var(--acc)}
+
+.page{display:none;padding:18px;max-width:1160px;margin:0 auto}
+.page.active{display:block}
+
+/* ---- FIELD ---- */
+.field-layout{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.field-3d-wrap{flex:1;min-width:280px;perspective:1000px}
+.f3outer{transform:rotateX(7deg);transform-origin:50% 100%;border-radius:14px;overflow:visible;box-shadow:0 28px 70px rgba(0,0,0,0.85),0 0 0 1px rgba(255,255,255,0.05);position:relative}
+.f3inner{border-radius:14px;overflow:hidden;position:relative;width:100%}
+.f3inner::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 100%,transparent 35%,rgba(0,0,0,0.55) 100%)}
+.goal3d{position:absolute;left:50%;transform:translateX(-50%);z-index:10}
+.goal3d.top{top:-30px}
+.goal3d.bottom{bottom:-30px}
+.players-layer{position:absolute;inset:0;z-index:20}
+.ptoken{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;transition:transform .2s,filter .2s;z-index:25}
+.ptoken:hover{transform:translate(-50%,-50%) scale(1.13);filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,255,255,0.3))}
+.ptoken svg{display:block;margin:0 auto}
+.pname{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:12px;letter-spacing:.3px;color:#fff;text-shadow:0 1px 0 #000,0 0 8px #000,0 2px 10px rgba(0,0,0,1);white-space:nowrap;margin-top:2px;line-height:1.1}
+
+.form-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:11px;flex-wrap:wrap;gap:7px}
+.fsel{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;outline:none}
+.fsel option{background:#0e1e12}
+.match-badge{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;color:var(--gold)}
+
+.teams-sb{width:240px;display:flex;flex-direction:column;gap:10px}
+.tcard{background:var(--card);border-radius:11px;padding:13px;border:1px solid var(--border)}
+.thdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.tname-d{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;gap:6px}
+.tdot{width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0}
+.prow{display:flex;align-items:center;gap:7px;padding:4px 7px;border-radius:6px;background:rgba(255,255,255,0.03);margin-bottom:3px;font-size:13px;font-weight:600}
+.prow-n{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted);width:15px;text-align:center}
+.gkb{font-size:9px;font-weight:700;letter-spacing:.5px;background:rgba(255,200,0,.15);color:var(--gold);padding:1px 4px;border-radius:3px;margin-left:auto}
+
+/* ---- SETUP ---- */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.sg{grid-template-columns:1fr}}
+.sec{background:var(--card);border-radius:11px;padding:16px;border:1px solid var(--border)}
+.stitle{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--acc);margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.inp,.sel{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color .2s;margin-bottom:9px}
+.inp:focus,.sel:focus{border-color:var(--acc)}
+.sel option{background:#0e1e12}
+.crow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+.csw{width:24px;height:24px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.csw.on,.csw:hover{border-color:#fff;transform:scale(1.18)}
+input[type=color]{width:28px;height:24px;border-radius:5px;border:none;cursor:pointer;background:transparent;padding:1px}
+.divider{height:1px;background:var(--border);margin:10px 0}
+
+.aw{display:flex;gap:10px;flex-wrap:wrap}
+.pool{flex:1;min-width:130px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:8px;padding:9px;min-height:80px}
+.pttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+.dragp{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:12px;font-weight:600;cursor:grab;display:flex;align-items:center;gap:5px;margin-bottom:3px;transition:background .15s;user-select:none}
+.dragp:hover{background:rgba(255,255,255,0.09)}
+.dragp.dragging{opacity:.3}
+.pool.drag-over{border-color:var(--acc);background:rgba(74,222,128,0.06)}
+
+/* ---- BUTTONS ---- */
+.btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:7px 16px;border-radius:7px;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.bg{background:var(--acc);color:#080f0a}.bg:hover{background:#6ee7a0}
+.bgold{background:var(--gold);color:#000}.bgold:hover{background:#fac843}
+.bred{background:var(--red);color:#fff}.bred:hover{background:#f87171}
+.bghost{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border)}.bghost:hover{background:rgba(255,255,255,0.11)}
+.bblue{background:var(--blue);color:#000}.bblue:hover{background:#7dd3fc}
+.bsm{font-size:11px;padding:4px 10px}
+.bfull{width:100%;justify-content:center}
+
+/* ---- MEMBERS ---- */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:9px;margin-top:12px}
+.mc{background:var(--card);border-radius:9px;padding:11px;border:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.av{width:36px;height:36px;border-radius:7px;background:var(--g1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff;flex-shrink:0}
+.mn{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp{font-size:11px;color:var(--muted)}
+.ib{width:25px;height:25px;border-radius:5px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:12px;transition:all .15s;flex-shrink:0}
+.ib:hover{background:rgba(255,255,255,0.1);color:#fff}
+.ib.dl:hover{background:rgba(239,68,68,.2);color:var(--red);border-color:var(--red)}
+
+/* ---- TOURNAMENT ---- */
+.tbr{display:flex;gap:18px;overflow-x:auto;padding-bottom:12px}
+.trd{display:flex;flex-direction:column;gap:10px;min-width:150px}
+.rlbl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-align:center;margin-bottom:3px}
+.tmatch{background:var(--card2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.trow{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;font-size:12px;font-weight:600;gap:5px}
+.trow:first-child{border-bottom:1px solid var(--border)}
+.tscore{font-family:'Bebas Neue',sans-serif;font-size:17px;width:20px;text-align:center;cursor:pointer;color:var(--muted)}
+.tscore:hover{color:var(--gold)}
+.twin{background:rgba(74,222,128,0.1)}
+
+/* ---- MODAL ---- */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:300;align-items:center;justify-content:center;padding:16px}
+.mo.open{display:flex}
+.mdl{background:#0d1f10;border:1px solid rgba(255,255,255,0.1);border-radius:13px;padding:20px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto}
+.mttl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--acc);margin-bottom:13px}
+.macts{display:flex;gap:7px;margin-top:12px;justify-content:flex-end}
+
+/* ---- SHARE ---- */
+.wal{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;margin-bottom:9px}
+.warow{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 10px;font-size:12px}
+.wabtn{background:#25D366;color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px}
+.waall{background:#25D366;color:#fff;width:100%;border:none;border-radius:7px;padding:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:5px;transition:background .2s}
+.waall:hover{background:#1ebe5d}
+
+.cbtn{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);color:var(--acc);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:5px 11px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .2s}
+.cbtn:hover{background:rgba(74,222,128,0.18)}
+
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:7px}
+.pht{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--acc)}
+
+.toast{position:fixed;bottom:18px;right:18px;font-weight:700;font-size:13px;padding:8px 15px;border-radius:7px;z-index:9999;transform:translateY(50px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ========== MAÇ DAVET SAYFASI ========== */
+#page-invite{
+  min-height:100vh;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background: radial-gradient(ellipse at 50% 30%, #1a4a2a 0%, #080f0a 70%);
+}
+#page-invite.active{display:flex}
+
+.invite-card{
+  background:var(--card);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;
+  padding:32px 28px;
+  max-width:420px;
+  width:100%;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.invite-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--acc);margin-bottom:20px}
+.invite-logo em{color:var(--gold);font-style:normal}
+.invite-field-icon{font-size:56px;margin-bottom:8px}
+.invite-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--gold);margin-bottom:4px}
+.invite-subtitle{font-size:14px;color:var(--muted);margin-bottom:24px}
+.invite-details{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:22px;
+  text-align:left;
+}
+.invite-detail-row{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px}
+.invite-detail-row:last-child{margin-bottom:0}
+.invite-detail-row strong{color:var(--text)}
+.invite-detail-icon{font-size:16px;width:22px;text-align:center}
+
+.name-select-wrap{margin-bottom:20px;text-align:left}
+.name-select-wrap .lbl{margin-bottom:6px}
+.name-sel{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 13px;font-size:14px;font-family:'Barlow',sans-serif;outline:none;cursor:pointer}
+.name-sel option{background:#0e1e12}
+
+.invite-btns{display:flex;gap:10px;flex-direction:column}
+.invite-yes{
+  background:linear-gradient(135deg,#16a34a,#22c55e);
+  color:#fff;border:none;border-radius:10px;padding:14px;
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 20px rgba(34,197,94,0.3);
+}
+.invite-yes:hover{transform:translateY(-1px);box-shadow:0 6px 25px rgba(34,197,94,0.45)}
+.invite-no{
+  background:rgba(239,68,68,0.12);
+  color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:13px;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;
+  cursor:pointer;transition:all .2s;
+}
+.invite-no:hover{background:rgba(239,68,68,0.2)}
+.invite-sent{
+  background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);
+  border-radius:10px;padding:16px;text-align:center;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;
+  color:var(--acc);display:none;margin-top:10px;
+}
+
+/* ========== MAÇ ORGANİZASYON ========== */
+.org-steps{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.org-step{
+  flex:1;min-width:80px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:8px 6px;border-radius:8px;text-align:center;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  color:var(--muted);transition:all .3s;cursor:default;
+}
+.org-step.active{background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.4);color:var(--acc)}
+.org-step.done{background:rgba(74,222,128,0.06);border-color:rgba(74,222,128,0.2);color:var(--muted)}
+.org-step .snum{font-family:'Bebas Neue',sans-serif;font-size:18px;display:block;margin-bottom:2px}
+
+.org-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.org-ptitle{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:1px;color:var(--acc);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+
+/* player select checkboxes */
+.player-chk-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:260px;overflow-y:auto}
+.pchk{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;cursor:pointer;transition:all .15s;
+  user-select:none;font-size:13px;font-weight:600;
+}
+.pchk:hover{background:rgba(255,255,255,0.07)}
+.pchk.checked{background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.4);color:var(--acc)}
+.pchk input{display:none}
+.pchk-dot{width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:9px}
+.pchk.checked .pchk-dot{background:var(--acc);border-color:var(--acc);color:#080f0a}
+
+/* rsvp list */
+.rsvp-list{display:flex;flex-direction:column;gap:5px}
+.rsvp-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;
+}
+.rsvp-badge{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.5px;padding:2px 8px;border-radius:4px}
+.rsvp-yes{background:rgba(34,197,94,0.15);color:#22c55e}
+.rsvp-no{background:rgba(239,68,68,0.15);color:var(--red)}
+.rsvp-wait{background:rgba(255,255,255,0.08);color:var(--muted)}
+.rsvp-add-btn{
+  background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);
+  color:var(--acc);border-radius:5px;padding:3px 9px;font-size:11px;
+  font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;
+  letter-spacing:.5px;
+}
+.rsvp-add-btn:hover{background:rgba(74,222,128,0.2)}
+.rsvp-remove-btn{
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+  color:var(--red);border-radius:5px;padding:3px 9px;font-size:11px;
+  font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;
+  letter-spacing:.5px;
+}
+
+/* invite link box */
+.link-box{
+  background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);
+  border-radius:9px;padding:12px 14px;
+  font-size:12px;word-break:break-all;color:var(--blue);
+  cursor:pointer;transition:background .15s;margin-bottom:8px;
+}
+.link-box:hover{background:rgba(56,189,248,0.1)}
+
+.match-summary-card{
+  background:linear-gradient(135deg,rgba(30,107,42,0.3),rgba(10,26,13,0.8));
+  border:1px solid rgba(74,222,128,0.2);
+  border-radius:12px;padding:16px;margin-bottom:14px;
+}
+.ms-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold);margin-bottom:8px}
+.ms-row{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:5px}
+.ms-icon{font-size:16px;width:22px}
+
+.org-empty{text-align:center;padding:40px;color:var(--muted)}
+.org-empty div:first-child{font-size:40px;margin-bottom:10px}
+.org-empty div:last-child{font-size:14px}
+
+.attending-count{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;
+  background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);
+  color:var(--acc);padding:4px 12px;border-radius:6px;
+}
+
+@media(max-width:680px){
+  .field-layout{flex-direction:column}
+  .teams-sb{width:100%;flex-direction:row}
+  .tcard{flex:1}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⚽ HALI<em>SAHA</em> PRO</div>
+  <div class="nav-tabs">
+    <button class="ntab active" onclick="gp('field')">🏟 Saha</button>
+    <button class="ntab" onclick="gp('org')">📋 Organizasyon</button>
+    <button class="ntab" onclick="gp('setup')">⚙️ Kurulum</button>
+    <button class="ntab" onclick="gp('members')">👥 Oyuncular</button>
+    <button class="ntab" onclick="gp('tournament')">🏆 Turnuva</button>
+  </div>
+  <div class="admin-row">
+    <div class="adot" id="adot"></div>
+    <span id="albl" style="font-size:11px;color:var(--muted)">Ziyaretçi</span>
+    <button class="apill" onclick="om('mAdmin')">YETKİ</button>
+  </div>
+</nav>
+
+<!-- ========== FIELD PAGE ========== -->
+<div class="page active" id="page-field">
+  <div class="form-bar">
+    <div class="match-badge" id="mbadge">🏟 Maç Kurulmadı</div>
+    <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px">T1</span>
+      <select class="fsel" id="fs1" onchange="rf()">
+        <option value="gk-1-2">GK·1-2</option><option value="gk-2-1">GK·2-1</option>
+        <option value="gk-1-1-1">GK·1-1-1</option><option value="gk-1-2-1">GK·1-2-1</option>
+        <option value="gk-2-2">GK·2-2</option><option value="gk-1-1-2">GK·1-1-2</option>
+        <option value="gk-2-1-2">GK·2-1-2</option><option value="gk-3-2">GK·3-2</option>
+        <option value="gk-2-3">GK·2-3</option><option value="gk-2-2-2">GK·2-2-2</option>
+      </select>
+      <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px">T2</span>
+      <select class="fsel" id="fs2" onchange="rf()">
+        <option value="gk-1-2">GK·1-2</option><option value="gk-2-1">GK·2-1</option>
+        <option value="gk-1-1-1">GK·1-1-1</option><option value="gk-1-2-1" selected>GK·1-2-1</option>
+        <option value="gk-2-2">GK·2-2</option><option value="gk-1-1-2">GK·1-1-2</option>
+        <option value="gk-2-1-2">GK·2-1-2</option><option value="gk-3-2">GK·3-2</option>
+        <option value="gk-2-3">GK·2-3</option><option value="gk-2-2-2">GK·2-2-2</option>
+      </select>
+      <button class="btn bgold bsm" onclick="openShare()">📲 WhatsApp</button>
+      <button class="btn bghost bsm" onclick="gp('setup')">⚙️</button>
+    </div>
+  </div>
+  <div class="field-layout">
+    <div class="field-3d-wrap">
+      <div class="f3outer" id="f3out">
+        <div class="goal3d top" id="gTop"></div>
+        <div class="goal3d bottom" id="gBot"></div>
+        <div class="f3inner" id="f3in">
+          <svg id="fsvg" viewBox="0 0 340 520" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%"></svg>
+          <div class="players-layer" id="plyr"></div>
+        </div>
+      </div>
+    </div>
+    <div class="teams-sb">
+      <div class="tcard">
+        <div class="thdr"><div class="tname-d"><span class="tdot" id="td1"></span><span id="tn1">Takım 1</span></div><span id="tc1" style="font-size:11px;color:var(--muted)"></span></div>
+        <div id="tl1"></div>
+      </div>
+      <div class="tcard">
+        <div class="thdr"><div class="tname-d"><span class="tdot" id="td2"></span><span id="tn2">Takım 2</span></div><span id="tc2" style="font-size:11px;color:var(--muted)"></span></div>
+        <div id="tl2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ORGANİZASYON PAGE ========== -->
+<div class="page" id="page-org">
+  <div class="ph">
+    <div class="pht">📋 MAÇ ORGANİZASYONU</div>
+    <button class="btn bg" onclick="newMatch()" id="newMatchBtn">+ Yeni Maç Oluştur</button>
+  </div>
+
+  <!-- ADIM GÖSTERGESİ -->
+  <div class="org-steps" id="orgSteps" style="display:none">
+    <div class="org-step active" id="step1"><span class="snum">1</span>Maç Bilgisi</div>
+    <div class="org-step" id="step2"><span class="snum">2</span>Davet Gönder</div>
+    <div class="org-step" id="step3"><span class="snum">3</span>Katılım Takibi</div>
+    <div class="org-step" id="step4"><span class="snum">4</span>Kadro Kur</div>
+    <div class="org-step" id="step5"><span class="snum">5</span>Kadro Gönder</div>
+  </div>
+
+  <div id="orgContent">
+    <div class="org-empty">
+      <div>📋</div>
+      <div>Henüz maç yok. "Yeni Maç Oluştur" ile başla.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SETUP PAGE ========== -->
+<div class="page" id="page-setup">
+  <div class="ph"><div class="pht">⚙ KURULUM</div></div>
+  <div class="sg">
+    <div class="sec">
+      <div class="stitle">📋 Maç Bilgileri</div>
+      <label class="lbl">Saha Adı</label><input class="inp" id="sV" placeholder="Bornova Halı Saha">
+      <label class="lbl">Gün</label>
+      <select class="sel" id="sD"><option>Pazartesi</option><option>Salı</option><option>Çarşamba</option><option>Perşembe</option><option>Cuma</option><option>Cumartesi</option><option>Pazar</option></select>
+      <label class="lbl">Saat</label><input class="inp" id="sT" type="time" value="20:00">
+      <label class="lbl">Format</label>
+      <select class="sel" id="sF"><option value="5">5v5</option><option value="6" selected>6v6</option><option value="7">7v7</option></select>
+    </div>
+    <div class="sec">
+      <div class="stitle">🎽 Takım Renkleri</div>
+      <label class="lbl">Takım 1 Adı</label><input class="inp" id="t1ni" value="Kırmızı Takım">
+      <label class="lbl">Takım 1 Forma</label>
+      <div class="crow" id="c1">
+        <div class="csw on" style="background:#ef4444" data-c="#ef4444" onclick="pc(1,this)"></div>
+        <div class="csw" style="background:#f97316" data-c="#f97316" onclick="pc(1,this)"></div>
+        <div class="csw" style="background:#3b82f6" data-c="#3b82f6" onclick="pc(1,this)"></div>
+        <div class="csw" style="background:#8b5cf6" data-c="#8b5cf6" onclick="pc(1,this)"></div>
+        <div class="csw" style="background:#0ea5e9" data-c="#0ea5e9" onclick="pc(1,this)"></div>
+        <input type="color" value="#ef4444" onchange="cc(1,this)">
+      </div>
+      <label class="lbl">Kaleci Rengi (T1)</label>
+      <div class="crow" id="gk1">
+        <div class="csw on" style="background:#facc15" data-c="#facc15" onclick="pgk(1,this)"></div>
+        <div class="csw" style="background:#22c55e" data-c="#22c55e" onclick="pgk(1,this)"></div>
+        <div class="csw" style="background:#ec4899" data-c="#ec4899" onclick="pgk(1,this)"></div>
+        <input type="color" value="#facc15" onchange="cgk(1,this)">
+      </div>
+      <div class="divider"></div>
+      <label class="lbl">Takım 2 Adı</label><input class="inp" id="t2ni" value="Beyaz Takım">
+      <label class="lbl">Takım 2 Forma</label>
+      <div class="crow" id="c2">
+        <div class="csw on" style="background:#f1f5f9" data-c="#f1f5f9" onclick="pc(2,this)"></div>
+        <div class="csw" style="background:#4ade80" data-c="#4ade80" onclick="pc(2,this)"></div>
+        <div class="csw" style="background:#fbbf24" data-c="#fbbf24" onclick="pc(2,this)"></div>
+        <div class="csw" style="background:#f472b6" data-c="#f472b6" onclick="pc(2,this)"></div>
+        <input type="color" value="#f1f5f9" onchange="cc(2,this)">
+      </div>
+      <label class="lbl">Kaleci Rengi (T2)</label>
+      <div class="crow" id="gk2">
+        <div class="csw on" style="background:#a78bfa" data-c="#a78bfa" onclick="pgk(2,this)"></div>
+        <div class="csw" style="background:#fb923c" data-c="#fb923c" onclick="pgk(2,this)"></div>
+        <div class="csw" style="background:#34d399" data-c="#34d399" onclick="pgk(2,this)"></div>
+        <input type="color" value="#a78bfa" onchange="cgk(2,this)">
+      </div>
+    </div>
+    <div class="sec" style="grid-column:1/-1">
+      <div class="stitle">👥 Oyuncu Dağılımı</div>
+      <div class="aw">
+        <div class="pool" id="poolBox" ondragover="dov(event)" ondrop="dop(event,'pool')"><div class="pttl">⬜ Havuz</div><div id="poolL"></div></div>
+        <div class="pool" id="t1pool" ondragover="dov(event)" ondrop="dop(event,'t1')"><div class="pttl" id="p1lbl">🔴 Takım 1</div><div id="t1L"></div></div>
+        <div class="pool" id="t2pool" ondragover="dov(event)" ondrop="dop(event,'t2')"><div class="pttl" id="p2lbl">⚪ Takım 2</div><div id="t2L"></div></div>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">
+        <button class="btn bghost bsm" onclick="autoA()">🎲 Otomatik Dağıt</button>
+        <button class="btn bghost bsm" onclick="clrT()">🗑 Temizle</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button class="btn bghost" onclick="gp('field')">İptal</button>
+    <button class="btn bg" onclick="sv()">✅ Kaydet</button>
+  </div>
+</div>
+
+<!-- ========== MEMBERS PAGE ========== -->
+<div class="page" id="page-members">
+  <div class="ph">
+    <div class="pht">👥 OYUNCULAR</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="cbtn" onclick="pickContact()">📱 Rehberden Ekle</button>
+      <button class="btn bg bsm" onclick="openAddM()">+ Manuel Ekle</button>
+    </div>
+  </div>
+  <div class="mg" id="mg"></div>
+</div>
+
+<!-- ========== TOURNAMENT PAGE ========== -->
+<div class="page" id="page-tournament">
+  <div class="ph"><div class="pht">🏆 TURNUVA</div><button class="btn bgold" onclick="openTS()">+ Yeni Turnuva</button></div>
+  <div id="tcont"></div>
+</div>
+
+<!-- ========== DAVETİYE SAYFASI (URL param ile) ========== -->
+<div class="page" id="page-invite" style="display:none">
+  <div class="invite-card">
+    <div class="invite-logo">⚽ HALI<em>SAHA</em> PRO</div>
+    <div class="invite-field-icon">🏟️</div>
+    <div class="invite-title">MAÇA DAVET</div>
+    <div class="invite-subtitle" id="invSubtitle">Seni bekliyoruz!</div>
+    <div class="invite-details" id="invDetails"></div>
+    <div class="name-select-wrap">
+      <label class="lbl">Sen kimsin?</label>
+      <select class="name-sel" id="invNameSel">
+        <option value="">-- Adını seç --</option>
+      </select>
+    </div>
+    <div class="invite-btns">
+      <button class="invite-yes" onclick="rsvpYes()">✅ KATILABİLİRİM!</button>
+      <button class="invite-no" onclick="rsvpNo()">❌ Katılamıyorum</button>
+    </div>
+    <div class="invite-sent" id="invSent"></div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="mo" id="mAdmin">
+  <div class="mdl">
+    <div class="mttl">🔐 Yetkili Girişi</div>
+    <label class="lbl">Şifre</label>
+    <input class="inp" id="apass" type="password" placeholder="Şifre" onkeydown="if(event.key==='Enter')doAdmin()">
+    <div style="font-size:11px;color:var(--muted);margin-top:-5px">Varsayılan: <strong style="color:var(--gold)">1234</strong></div>
+    <div class="macts"><button class="btn bghost" onclick="cm('mAdmin')">İptal</button><button class="btn bg" onclick="doAdmin()">Giriş</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mAddM">
+  <div class="mdl">
+    <div class="mttl" id="ammTtl">👤 Oyuncu Ekle</div>
+    <label class="lbl">Ad Soyad</label><input class="inp" id="mN" placeholder="Ahmet Yılmaz">
+    <label class="lbl">Telefon (WhatsApp)</label><input class="inp" id="mP" placeholder="905XXXXXXXXX">
+    <div class="macts"><button class="btn bghost" onclick="cm('mAddM')">İptal</button><button class="btn bg" id="ammBtn" onclick="addM()">Ekle</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mShare">
+  <div class="mdl" style="max-width:450px">
+    <div class="mttl">📲 Kadro WhatsApp Paylaş</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:9px">Her oyuncuya kişiselleştirilmiş kadro mesajı gönderilir.</div>
+    <div class="wal" id="wal"></div>
+    <button class="waall" onclick="sendAll()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Tümüne Gönder
+    </button>
+    <button class="btn bghost bfull" onclick="cm('mShare')">Kapat</button>
+  </div>
+</div>
+
+<!-- YENİ MAÇ MODAL -->
+<div class="mo" id="mNewMatch">
+  <div class="mdl">
+    <div class="mttl">⚽ Yeni Maç Oluştur</div>
+    <label class="lbl">Saha Adı</label><input class="inp" id="nmVenue" placeholder="Bornova Halı Saha">
+    <label class="lbl">Gün</label>
+    <select class="sel" id="nmDay"><option>Pazartesi</option><option>Salı</option><option>Çarşamba</option><option>Perşembe</option><option>Cuma</option><option>Cumartesi</option><option>Pazar</option></select>
+    <label class="lbl">Tarih</label><input class="inp" id="nmDate" type="date">
+    <label class="lbl">Saat</label><input class="inp" id="nmTime" type="time" value="20:00">
+    <label class="lbl">Format</label>
+    <select class="sel" id="nmFmt"><option value="5">5v5</option><option value="6" selected>6v6</option><option value="7">7v7</option></select>
+    <label class="lbl">Organizatör Numarası (WhatsApp)</label>
+    <input class="inp" id="nmPhone" placeholder="905XXXXXXXXX" title="Oyuncuların cevap göndereceği numara">
+    <div class="macts"><button class="btn bghost" onclick="cm('mNewMatch')">İptal</button><button class="btn bg" onclick="createMatch()">Oluştur ➜</button></div>
+  </div>
+</div>
+
+<!-- TOURN MODAL -->
+<div class="mo" id="mTourn">
+  <div class="mdl">
+    <div class="mttl">🏆 Turnuva Oluştur</div>
+    <label class="lbl">Turnuva Adı</label><input class="inp" id="tN" placeholder="Nisan Turnuvası">
+    <label class="lbl">Takım Sayısı</label>
+    <select class="sel" id="tC" onchange="btInputs()"><option value="4">4 Takım</option><option value="8">8 Takım</option></select>
+    <div id="tInputs"></div>
+    <div class="macts"><button class="btn bghost" onclick="cm('mTourn')">İptal</button><button class="btn bgold" onclick="createT()">Oluştur</button></div>
+  </div>
+</div>
+
+<div class="toast" id="tst"></div>
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+let S={
+  admin:false, pass:'1234',
+  venue:'', day:'Cumartesi', time:'20:00', fmt:6,
+  t1:{name:'Kırmızı Takım',color:'#ef4444',gkColor:'#facc15',players:[]},
+  t2:{name:'Beyaz Takım',color:'#f1f5f9',gkColor:'#a78bfa',players:[]},
+  members:[
+    {id:1,name:'Ahmet K.',phone:'905001234567'},
+    {id:2,name:'Mehmet Y.',phone:'905001234568'},
+    {id:3,name:'Burak D.',phone:'905001234569'},
+    {id:4,name:'Salih T.',phone:'905001234570'},
+    {id:5,name:'Emre S.',phone:'905001234571'},
+    {id:6,name:'Kemal A.',phone:'905001234572'},
+  ],
+  tourn:null,
+  // AKTİF MAÇ ORGANİZASYONU
+  match:{
+    id: null,
+    venue:'', day:'', date:'', time:'', fmt:6,
+    orgPhone:'',   // organizatörün WA numarası
+    invited:[],    // [{name, phone}]
+    rsvp:{},       // {name: 'yes'|'no'|'pending'}
+    step:1,        // 1=bilgi, 2=davet, 3=katılım, 4=kadro, 5=gönder
+    t1:{name:'Kırmızı Takım',color:'#ef4444',gkColor:'#facc15',players:[]},
+    t2:{name:'Beyaz Takım',color:'#f1f5f9',gkColor:'#a78bfa',players:[]},
+  }
+};
+let dP=null,dF=null;
+
+function save(){try{localStorage.setItem('hspro3',JSON.stringify(S))}catch(e){}}
+function load(){try{const d=localStorage.getItem('hspro3');if(d){const p=JSON.parse(d);S={...S,...p};if(p.match)S.match={...S.match,...p.match}}}catch(e){}}
+
+// ================================================================
+// NAV
+// ================================================================
+function gp(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const map={field:0,org:1,setup:2,members:3,tournament:4};
+  if(map[id]!==undefined) document.querySelectorAll('.ntab')[map[id]].classList.add('active');
+  if(id==='field')rf();
+  if(id==='setup')initS();
+  if(id==='members')rMem();
+  if(id==='tournament')rTourn();
+  if(id==='org')rOrg();
+}
+
+// ================================================================
+// ADMIN
+// ================================================================
+function doAdmin(){
+  if(document.getElementById('apass').value===S.pass){
+    S.admin=true;cm('mAdmin');
+    document.getElementById('adot').classList.add('on');
+    document.getElementById('albl').textContent='Yetkili';
+    toast('✅ Yetkili girişi başarılı');
+  }else toast('❌ Hatalı şifre',1);
+}
+
+// ================================================================
+// FIELD
+// ================================================================
+function rf(){
+  document.getElementById('mbadge').textContent=S.venue?`🏟 ${S.venue} · ${S.day} ${S.time}`:'🏟 Maç Kurulmadı';
+  document.getElementById('td1').style.background=S.t1.color;
+  document.getElementById('tn1').textContent=S.t1.name;
+  document.getElementById('tc1').textContent=S.t1.players.length+' oyuncu';
+  document.getElementById('td2').style.background=S.t2.color;
+  document.getElementById('tn2').textContent=S.t2.name;
+  document.getElementById('tc2').textContent=S.t2.players.length+' oyuncu';
+  const mkrow=(name,i,gk,c,gc)=>{
+    const col=gk?gc:c;const tc=isl(col)?'#111':'#fff';
+    return `<div class="prow"><span class="prow-n">${i+1}</span><svg width="13" height="15" viewBox="0 0 24 28">${shirtG(col,tc,'')}</svg><span>${name}</span>${gk?'<span class="gkb">KL</span>':''}</div>`;
+  };
+  document.getElementById('tl1').innerHTML=S.t1.players.length?S.t1.players.map((n,i)=>mkrow(n,i,i===0,S.t1.color,S.t1.gkColor)).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px">Atanmadı</div>';
+  document.getElementById('tl2').innerHTML=S.t2.players.length?S.t2.players.map((n,i)=>mkrow(n,i,i===0,S.t2.color,S.t2.gkColor)).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px">Atanmadı</div>';
+  drawSVG();drawGoals();placePlayers();
+}
+
+function drawSVG(){
+  const svg=document.getElementById('fsvg');
+  const W=340,H=520,L='rgba(255,255,255,0.83)',lw=1.8;
+  let s='';
+  for(let i=0;i<H;i+=38){s+=`<rect x="0" y="${i}" width="${W}" height="19" fill="#1e6b2a"/><rect x="0" y="${i+19}" width="${W}" height="19" fill="#226230"/>` }
+  s+=`<defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity=".28"/><stop offset="45%" stop-color="transparent" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".22"/></linearGradient><linearGradient id="sg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#000" stop-opacity=".22"/><stop offset="8%" stop-color="transparent" stop-opacity="0"/><stop offset="92%" stop-color="transparent" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".22"/></linearGradient><filter id="ls"><feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000" flood-opacity=".4"/></filter></defs>`;
+  s+=`<rect x="20" y="18" width="300" height="484" rx="4" fill="none" stroke="${L}" stroke-width="${lw}" filter="url(#ls)"/>
+  <line x1="20" y1="260" x2="320" y2="260" stroke="${L}" stroke-width="${lw}"/>
+  <ellipse cx="170" cy="260" rx="52" ry="44" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <circle cx="170" cy="260" r="4" fill="${L}"/>
+  <rect x="90" y="18" width="160" height="80" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <rect x="126" y="18" width="88" height="34" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <circle cx="170" cy="80" r="3.5" fill="${L}"/>
+  <rect x="90" y="422" width="160" height="80" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <rect x="126" y="468" width="88" height="34" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <circle cx="170" cy="440" r="3.5" fill="${L}"/>
+  <path d="M20,34 A14,14 0 0 0 34,18" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <path d="M306,18 A14,14 0 0 0 320,34" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <path d="M20,486 A14,14 0 0 1 34,502" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <path d="M306,502 A14,14 0 0 1 320,486" fill="none" stroke="${L}" stroke-width="${lw}"/>
+  <rect x="0" y="0" width="${W}" height="${H}" fill="url(#dg)"/>
+  <rect x="0" y="0" width="${W}" height="${H}" fill="url(#sg)"/>`;
+  svg.innerHTML=s;
+}
+
+function drawGoals(){
+  // gw=88 matches the goal-area width in the SVG (x:126..214 = 88px wide)
+  // For TOP goal: front crossbar is at the BOTTOM of the svg (y=gh+d), sits on the top field line
+  // For BOTTOM goal: front crossbar is at the TOP of the svg (y=0), sits on the bottom field line
+  const mkGoal=(dir)=>{
+    const gw=88,gh=20,d=10;
+    const lc='rgba(255,255,255,0.92)';
+    const lco='rgba(255,255,255,0.40)';
+    const pc=2.5;
+    const netFill='rgba(255,255,255,0.04)';
+    const postFill='rgba(255,255,255,0.82)';
+    // Net lines helper
+    const vLines=(x1fn,y1fn,x2fn,y2fn,n)=>Array.from({length:n-1},(_,i)=>{const t=(i+1)/n;return`<line x1="${x1fn(t)}" y1="${y1fn(t)}" x2="${x2fn(t)}" y2="${y2fn(t)}" stroke="${lc}" stroke-width=".45" opacity=".28"/>`}).join('');
+
+    if(dir==='top'){
+      // SVG height = gh + d  (back net up top, front crossbar at bottom)
+      const H=gh+d;
+      return `<svg width="${gw}" height="${H}" viewBox="0 0 ${gw} ${H}" xmlns="http://www.w3.org/2000/svg">
+        <!-- back net rectangle -->
+        <rect x="0" y="0" width="${gw}" height="${gh}" fill="${netFill}" stroke="${lco}" stroke-width="1"/>
+        <!-- roof (top trapezoid face) - perspective -->
+        <path d="M0,${gh} L${d},0 L${gw-d},0 L${gw},${gh} Z" fill="${netFill}" stroke="${lco}" stroke-width=".8" opacity=".5"/>
+        <!-- right side face -->
+        <path d="M${gw},0 L${gw},${gh} L${gw},${H} L${gw},${gh} Z" fill="none"/>
+        <!-- front posts (bottom = front crossbar line) -->
+        <rect x="0" y="${gh}" width="${pc}" height="${d}" fill="${postFill}" rx="1"/>
+        <rect x="${gw-pc}" y="${gh}" width="${pc}" height="${d}" fill="${postFill}" rx="1"/>
+        <!-- front crossbar - THIS sits on the field top line -->
+        <rect x="0" y="${H-pc}" width="${gw}" height="${pc}" fill="${lc}" rx="1"/>
+        <!-- vertical net lines -->
+        ${vLines(t=>t*gw,_=>0,t=>t*gw,_=>gh,8)}
+        <!-- horizontal net lines -->
+        ${vLines(_=>0,t=>t*gh,_=>gw,t=>t*gh,4)}
+      </svg>`;
+    } else {
+      // BOTTOM goal: front crossbar at TOP (y=0), posts go down
+      return `<svg width="${gw}" height="${gh+d}" viewBox="0 0 ${gw} ${gh+d}" xmlns="http://www.w3.org/2000/svg">
+        <!-- front crossbar - sits on bottom field line -->
+        <rect x="0" y="0" width="${gw}" height="${pc}" fill="${lc}" rx="1"/>
+        <!-- front posts -->
+        <rect x="0" y="0" width="${pc}" height="${d}" fill="${postFill}" rx="1"/>
+        <rect x="${gw-pc}" y="0" width="${pc}" height="${d}" fill="${postFill}" rx="1"/>
+        <!-- back net rectangle -->
+        <rect x="0" y="${d}" width="${gw}" height="${gh}" fill="${netFill}" stroke="${lco}" stroke-width="1"/>
+        <!-- roof perspective -->
+        <path d="M0,${d} L${d},${d+gh} L${gw-d},${d+gh} L${gw},${d} Z" fill="${netFill}" stroke="${lco}" stroke-width=".8" opacity=".5"/>
+        <!-- vertical net lines -->
+        ${vLines(t=>t*gw,_=>d,t=>t*gw,_=>d+gh,8)}
+        <!-- horizontal net lines -->
+        ${vLines(_=>0,t=>d+t*gh,_=>gw,t=>d+t*gh,4)}
+      </svg>`;
+    }
+  };
+  document.getElementById('gTop').innerHTML=mkGoal('top');
+  document.getElementById('gBot').innerHTML=mkGoal('bottom');
+}
+
+function shirtG(color,tc,num){
+  return `<path d="M3,8 L0,5 L4,1 Q8,-1 12,2 Q16,-1 20,1 L24,5 L21,8 L19,7 L19,26 Q19,28 12,28 Q5,28 5,26 L5,7 Z" fill="${color}" stroke="rgba(0,0,0,0.35)" stroke-width=".8"/><path d="M3,8 L0,5 L0,13 L5,14 Z" fill="${color}" stroke="rgba(0,0,0,0.3)" stroke-width=".6"/><path d="M21,8 L24,5 L24,13 L19,14 Z" fill="${color}" stroke="rgba(0,0,0,0.3)" stroke-width=".6"/><path d="M9,2 Q12,5 15,2" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.1"/><path d="M5,7 L5,15 Q7.5,14 9,7 Z" fill="rgba(255,255,255,0.08)"/><text x="12" y="19.5" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="9" fill="${tc}" font-weight="bold">${num}</text>`;
+}
+
+function mkToken(name,pos,color,tc,num){
+  const el=document.createElement('div');el.className='ptoken';
+  el.style.left=pos.x+'%';el.style.top=pos.y+'%';
+  const short=name.split(' ').map((w,i)=>i===0?w:w[0]+'.').join(' ');
+  el.innerHTML=`<svg width="44" height="50" viewBox="0 0 24 28" xmlns="http://www.w3.org/2000/svg">${shirtG(color,tc,num)}</svg><div class="pname">${short}</div>`;
+  return el;
+}
+
+function placePlayers(){
+  const layer=document.getElementById('plyr');layer.innerHTML='';
+  const pos1=getPos(document.getElementById('fs1').value,'top',S.t1.players.length);
+  const pos2=getPos(document.getElementById('fs2').value,'bottom',S.t2.players.length);
+  S.t1.players.forEach((n,i)=>{if(!pos1[i])return;const gk=i===0;const c=gk?S.t1.gkColor:S.t1.color;const tc=isl(c)?'#111':'#fff';layer.appendChild(mkToken(n,pos1[i],c,tc,i+1));});
+  S.t2.players.forEach((n,i)=>{if(!pos2[i])return;const gk=i===0;const c=gk?S.t2.gkColor:S.t2.color;const tc=isl(c)?'#111':'#fff';layer.appendChild(mkToken(n,pos2[i],c,tc,i+1));});
+}
+
+function getPos(scheme,side,count){
+  const isTop=side==='top';
+  const rows=scheme.split('-').filter(x=>x!=='gk').map(Number);
+  const gkY=isTop?6:94;const sy=isTop?20:80;const ey=isTop?48:52;
+  const step=rows.length<=1?0:(ey-sy)/(rows.length-1);
+  const positions=[{x:50,y:gkY}];
+  rows.forEach((n,ri)=>{
+    const y=rows.length===1?(isTop?33:67):sy+ri*step;
+    if(n===1){positions.push({x:50,y});return}
+    const sp=n===2?32:n===3?40:46;const half=sp/2;const gap=sp/(n-1);
+    for(let j=0;j<n;j++)positions.push({x:50-half+j*gap,y});
+  });
+  return positions.slice(0,count+1);
+}
+
+// ================================================================
+// SETUP
+// ================================================================
+function initS(){
+  if(!S.admin){toast('⚠️ Yetkili girişi gerekli',1);om('mAdmin');return}
+  document.getElementById('sV').value=S.venue;document.getElementById('sD').value=S.day;
+  document.getElementById('sT').value=S.time;document.getElementById('sF').value=S.fmt;
+  document.getElementById('t1ni').value=S.t1.name;document.getElementById('t2ni').value=S.t2.name;
+  bPools();updPL();
+}
+function bPools(){
+  const ass=[...S.t1.players,...S.t2.players];
+  const pool=S.members.filter(m=>!ass.includes(m.name));
+  document.getElementById('poolL').innerHTML=pool.map(m=>mkD(m.name,'pool')).join('');
+  document.getElementById('t1L').innerHTML=S.t1.players.map(n=>mkD(n,'t1')).join('');
+  document.getElementById('t2L').innerHTML=S.t2.players.map(n=>mkD(n,'t2')).join('');
+}
+function mkD(name,from){return `<div class="dragp" draggable="true" data-n="${name}" data-f="${from}" ondragstart="ds(event)" ondragend="de(event)">⠿ ${name}</div>`}
+function ds(e){dP=e.target.dataset.n;dF=e.target.dataset.f;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+function de(e){e.target.classList.remove('dragging')}
+function dov(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
+function dop(e,target){
+  e.preventDefault();document.querySelectorAll('.pool').forEach(p=>p.classList.remove('drag-over'));
+  if(!dP||dF===target){dP=null;return}
+  if(dF==='t1')S.t1.players=S.t1.players.filter(p=>p!==dP);
+  else if(dF==='t2')S.t2.players=S.t2.players.filter(p=>p!==dP);
+  const fmt=parseInt(document.getElementById('sF').value);
+  if(target==='t1'){if(S.t1.players.length<fmt)S.t1.players.push(dP);else toast(`⚠️ T1 doldu`,1)}
+  else if(target==='t2'){if(S.t2.players.length<fmt)S.t2.players.push(dP);else toast(`⚠️ T2 doldu`,1)}
+  dP=null;bPools();updPL();
+}
+function updPL(){
+  const fmt=parseInt(document.getElementById('sF').value)||S.fmt;
+  document.getElementById('p1lbl').textContent=`🔴 ${S.t1.name} (${S.t1.players.length}/${fmt})`;
+  document.getElementById('p2lbl').textContent=`⚪ ${S.t2.name} (${S.t2.players.length}/${fmt})`;
+}
+function autoA(){
+  const fmt=parseInt(document.getElementById('sF').value);S.t1.players=[];S.t2.players=[];
+  const sh=[...S.members].sort(()=>Math.random()-.5);
+  sh.forEach((m,i)=>{if(i<fmt)S.t1.players.push(m.name);else if(i<fmt*2)S.t2.players.push(m.name)});
+  bPools();updPL();toast('🎲 Otomatik dağıtıldı');
+}
+function clrT(){S.t1.players=[];S.t2.players=[];bPools();updPL()}
+function pc(t,el){document.querySelectorAll(`#c${t} .csw`).forEach(s=>s.classList.remove('on'));el.classList.add('on');S['t'+t].color=el.dataset.c}
+function cc(t,el){S['t'+t].color=el.value;document.querySelectorAll(`#c${t} .csw`).forEach(s=>s.classList.remove('on'))}
+function pgk(t,el){document.querySelectorAll(`#gk${t} .csw`).forEach(s=>s.classList.remove('on'));el.classList.add('on');S['t'+t].gkColor=el.dataset.c}
+function cgk(t,el){S['t'+t].gkColor=el.value;document.querySelectorAll(`#gk${t} .csw`).forEach(s=>s.classList.remove('on'))}
+function sv(){
+  S.venue=document.getElementById('sV').value||'Halı Saha';S.day=document.getElementById('sD').value;
+  S.time=document.getElementById('sT').value;S.fmt=parseInt(document.getElementById('sF').value);
+  S.t1.name=document.getElementById('t1ni').value||'Takım 1';S.t2.name=document.getElementById('t2ni').value||'Takım 2';
+  save();toast('✅ Kaydedildi!');gp('field');
+}
+
+// ================================================================
+// ORGANİZASYON AKIŞI
+// ================================================================
+function newMatch(){
+  if(!S.admin){toast('⚠️ Yetkili girişi gerekli',1);om('mAdmin');return}
+  // Set date input default to today
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('nmDate').value=today;
+  document.getElementById('nmVenue').value=S.venue||'';
+  document.getElementById('nmPhone').value=S.match.orgPhone||'';
+  om('mNewMatch');
+}
+
+function createMatch(){
+  const venue=document.getElementById('nmVenue').value.trim()||'Halı Saha';
+  const day=document.getElementById('nmDay').value;
+  const date=document.getElementById('nmDate').value;
+  const time=document.getElementById('nmTime').value;
+  const fmt=parseInt(document.getElementById('nmFmt').value);
+  const phone=document.getElementById('nmPhone').value.trim();
+  S.match={
+    id: Date.now().toString(36),
+    venue,day,date,time,fmt,orgPhone:phone,
+    invited:[],rsvp:{},step:2,
+    t1:{name:S.t1.name,color:S.t1.color,gkColor:S.t1.gkColor,players:[]},
+    t2:{name:S.t2.name,color:S.t2.color,gkColor:S.t2.gkColor,players:[]},
+  };
+  save();cm('mNewMatch');rOrg();toast('✅ Maç oluşturuldu! Şimdi davet gönder.');
+}
+
+function rOrg(){
+  const m=S.match;
+  const steps=document.getElementById('orgSteps');
+  const content=document.getElementById('orgContent');
+  const newBtn=document.getElementById('newMatchBtn');
+
+  if(!m||!m.id){
+    steps.style.display='none';
+    newBtn.style.display='';
+    content.innerHTML=`<div class="org-empty"><div>📋</div><div>Henüz maç yok. "Yeni Maç Oluştur" ile başla.</div></div>`;
+    return;
+  }
+
+  steps.style.display='flex';
+  newBtn.textContent='🗑 Maçı İptal Et';
+  newBtn.className='btn bred bsm';
+  newBtn.onclick=()=>{if(confirm('Maçı iptal et?')){S.match={id:null};newBtn.textContent='+ Yeni Maç Oluştur';newBtn.className='btn bg';newBtn.onclick=newMatch;save();rOrg()}};
+
+  // update step indicators
+  [1,2,3,4,5].forEach(i=>{
+    const el=document.getElementById('step'+i);
+    el.className='org-step'+(i===m.step?' active':i<m.step?' done':'');
+  });
+
+  const yesCount=Object.values(m.rsvp).filter(v=>v==='yes').length;
+  const noCount=Object.values(m.rsvp).filter(v=>v==='no').length;
+  const pendCount=m.invited.length - yesCount - noCount;
+
+  let html='';
+
+  // Maç özet kartı (her adımda göster)
+  html+=`<div class="match-summary-card">
+    <div class="ms-title">⚽ ${m.venue}</div>
+    <div class="ms-row"><span class="ms-icon">📅</span><span>${m.day}${m.date?' · '+fmtDate(m.date):''}</span></div>
+    <div class="ms-row"><span class="ms-icon">🕐</span><span>${m.time}</span></div>
+    <div class="ms-row"><span class="ms-icon">👥</span><span>${m.fmt}v${m.fmt} · Davet: ${m.invited.length} kişi</span></div>
+    ${m.invited.length?`<div class="ms-row"><span class="ms-icon">✅</span><span class="attending-count">Katılıyor: ${yesCount}</span> <span style="margin-left:6px;font-size:13px;color:var(--muted)">❌ ${noCount} · ⏳ ${pendCount}</span></div>`:''}
+  </div>`;
+
+  // ADIM 2: Davet gönder
+  if(m.step===2){
+    html+=`<div class="org-panel">
+      <div class="org-ptitle">📨 Adım 2 — Davetli Seç & Gönder</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Kimleri davet etmek istiyorsun? Seç ve WhatsApp'tan davetiye gönder.</div>
+      <div class="player-chk-list" id="inviteChkList"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn bghost bsm" onclick="selectAllInvite()">Tümünü Seç</button>
+        <button class="btn bghost bsm" onclick="clearInviteSelect()">Temizle</button>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Davet linkini oluştur ve her oyuncuya WhatsApp'tan gönder:</div>
+        <div class="link-box" id="invLinkBox" onclick="copyInvLink()" title="Kopyalamak için tıkla">🔗 Önce oyuncu seç...</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="waall" style="margin-bottom:0" onclick="sendInvites()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Seçilenlere Davet Gönder
+          </button>
+          <button class="btn bg" onclick="advanceStep(3)" style="flex:0">Katılım Takibine Geç ➜</button>
+        </div>
+      </div>
+    </div>`;
+    html+=`<script>setTimeout(renderInviteList,50)<\/script>`;
+  }
+
+  // ADIM 3: Katılım takibi
+  else if(m.step===3){
+    html+=`<div class="org-panel">
+      <div class="org-ptitle">📊 Adım 3 — Katılım Takibi</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Oyuncuların cevaplarını takip et. Manuel olarak da güncelleyebilirsin.</div>
+      <div class="rsvp-list" id="rsvpList"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+        <span class="attending-count">✅ Katılıyor: ${yesCount}</span>
+        <span style="font-size:13px;color:var(--muted)">❌ ${noCount} · ⏳ ${pendCount}</span>
+      </div>
+      ${yesCount>=4?`<button class="btn bg" onclick="advanceStep(4)" style="margin-top:12px">Kadro Kurmaya Geç ➜</button>`:`<div style="font-size:12px;color:var(--muted);margin-top:10px">⚠️ Kadro kurmak için en az 4 katılımcı gerekli.</div>`}
+    </div>`;
+    html+=`<script>setTimeout(renderRsvpList,50)<\/script>`;
+  }
+
+  // ADIM 4: Kadro kur
+  else if(m.step===4){
+    const attending=Object.entries(m.rsvp).filter(([,v])=>v==='yes').map(([k])=>k);
+    html+=`<div class="org-panel">
+      <div class="org-ptitle">🎽 Adım 4 — Kadro Kur</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Katılan ${attending.length} oyuncuyu takımlara dağıt.</div>
+      <div class="aw">
+        <div class="pool" id="matchPool" ondragover="dov(event)" ondrop="mdrop(event,'pool')"><div class="pttl">⬜ Havuz</div><div id="matchPoolL"></div></div>
+        <div class="pool" id="matchT1" ondragover="dov(event)" ondrop="mdrop(event,'t1')"><div class="pttl" id="mt1lbl">🔴 ${m.t1.name}</div><div id="matchT1L"></div></div>
+        <div class="pool" id="matchT2" ondragover="dov(event)" ondrop="mdrop(event,'t2')"><div class="pttl" id="mt2lbl">⚪ ${m.t2.name}</div><div id="matchT2L"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap">
+        <button class="btn bghost bsm" onclick="autoMatchAssign()">🎲 Otomatik Dağıt</button>
+        <button class="btn bghost bsm" onclick="clearMatchTeams()">🗑 Temizle</button>
+        <button class="btn bg bsm" onclick="advanceStep(5)" style="margin-left:auto">Kadroyu Gönder ➜</button>
+      </div>
+    </div>`;
+    html+=`<script>setTimeout(renderMatchPools,50)<\/script>`;
+  }
+
+  // ADIM 5: Kadro gönder
+  else if(m.step===5){
+    html+=`<div class="org-panel">
+      <div class="org-ptitle">📲 Adım 5 — Kadroyu Gönder</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Maç bilgileri ve kadro katılımcılara WhatsApp'tan iletilecek.</div>
+      <div class="wal" id="finalWaList"></div>
+      <button class="waall" onclick="sendFinalAll()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Tümüne Kadro Gönder
+      </button>
+      <button class="btn bg bfull" onclick="finishMatch()" style="margin-top:8px">🏁 Maçı Tamamla (Sahaya Aktar)</button>
+      <button class="btn bghost bfull" onclick="advanceStep(4)" style="margin-top:6px">← Geri Dön</button>
+    </div>`;
+    html+=`<script>setTimeout(renderFinalList,50)<\/script>`;
+  }
+
+  content.innerHTML=html;
+}
+
+function advanceStep(n){
+  S.match.step=n;save();rOrg();
+}
+
+// --- DAVET LİSTESİ ---
+function renderInviteList(){
+  const list=document.getElementById('inviteChkList');if(!list)return;
+  list.innerHTML=S.members.map(m=>{
+    const isInv=S.match.invited.some(x=>x.name===m.name);
+    return `<label class="pchk${isInv?' checked':''}" onclick="toggleInvite('${m.name}',this)">
+      <div class="pchk-dot">${isInv?'✓':''}</div>${m.name}
+    </label>`;
+  }).join('');
+  updateInvLink();
+}
+
+function toggleInvite(name,el){
+  el.classList.toggle('checked');
+  const dot=el.querySelector('.pchk-dot');
+  if(el.classList.contains('checked')){
+    dot.textContent='✓';
+    const m=S.members.find(x=>x.name===name);
+    if(m&&!S.match.invited.some(x=>x.name===name)){
+      S.match.invited.push({name:m.name,phone:m.phone});
+      if(!S.match.rsvp[name])S.match.rsvp[name]='pending';
+    }
+  }else{
+    dot.textContent='';
+    S.match.invited=S.match.invited.filter(x=>x.name!==name);
+    delete S.match.rsvp[name];
+  }
+  save();updateInvLink();
+}
+
+function updateInvLink(){
+  const box=document.getElementById('invLinkBox');if(!box)return;
+  const link=buildInviteLink();
+  box.textContent=link.length>80?link.substring(0,80)+'…':link;
+  box.title='Kopyalamak için tıkla: '+link;
+}
+
+function buildInviteLink(){
+  const base=window.location.href.split('?')[0];
+  const m=S.match;
+  // Encode match info into URL params — players will see invite page
+  const params=new URLSearchParams({
+    invite:'1',
+    mid:m.id,
+    venue:m.venue,
+    day:m.day,
+    date:m.date,
+    time:m.time,
+    fmt:m.fmt,
+    org:m.orgPhone,
+    players:S.match.invited.map(x=>x.name).join('|'),
+  });
+  return base+'?'+params.toString();
+}
+
+function copyInvLink(){
+  const link=buildInviteLink();
+  navigator.clipboard.writeText(link).then(()=>toast('📋 Link kopyalandı!')).catch(()=>{
+    prompt('Linki kopyala:',link);
+  });
+}
+
+function selectAllInvite(){
+  S.match.invited=S.members.map(m=>({name:m.name,phone:m.phone}));
+  S.members.forEach(m=>{if(!S.match.rsvp[m.name])S.match.rsvp[m.name]='pending'});
+  save();renderInviteList();
+}
+function clearInviteSelect(){S.match.invited=[];S.match.rsvp={};save();renderInviteList();}
+
+function sendInvites(){
+  if(!S.match.invited.length){toast('⚠️ Önce oyuncu seç',1);return}
+  const link=buildInviteLink();
+  const m=S.match;
+  const msg=`⚽ *HALI SAHA MAÇI DAVETİ*\n\n📅 *${m.day}${m.date?' · '+fmtDate(m.date):''}*\n🕐 *${m.time}*\n🏟 *${m.venue}*\n\nKatılıp katılamayacağını bildirmek için linke tıkla 👇\n${link}\n\nSeni bekliyoruz! ⚽`;
+  let i=0;
+  const go=()=>{
+    if(i>=S.match.invited.length){toast('📲 Davetler gönderiliyor...');return}
+    const inv=S.match.invited[i];
+    if(inv.phone) window.open(`https://wa.me/${inv.phone}?text=${encodeURIComponent(msg)}`,'_blank');
+    i++;setTimeout(go,750);
+  };go();
+}
+
+// --- RSVP LİSTESİ ---
+function renderRsvpList(){
+  const list=document.getElementById('rsvpList');if(!list)return;
+  list.innerHTML=S.match.invited.map(inv=>{
+    const status=S.match.rsvp[inv.name]||'pending';
+    const badge=status==='yes'?'<span class="rsvp-badge rsvp-yes">✅ Katılıyor</span>':status==='no'?'<span class="rsvp-badge rsvp-no">❌ Katılamıyor</span>':'<span class="rsvp-badge rsvp-wait">⏳ Bekleniyor</span>';
+    const toggle=status!=='yes'?`<button class="rsvp-add-btn" onclick="setRsvp('${inv.name}','yes')">✅ Katılıyor</button>`:`<button class="rsvp-remove-btn" onclick="setRsvp('${inv.name}','no')">❌ Katılamıyor</button>`;
+    return `<div class="rsvp-row"><div><div style="font-weight:600">${inv.name}</div><div style="font-size:11px;color:var(--muted)">${fp(inv.phone)}</div></div><div style="display:flex;align-items:center;gap:6px">${badge}${toggle}</div></div>`;
+  }).join('');
+}
+
+function setRsvp(name,status){S.match.rsvp[name]=status;save();rOrg();}
+
+// --- KADRO DRAGDROP (maç için) ---
+let mdP=null,mdF=null;
+function mdrop(e,target){
+  e.preventDefault();document.querySelectorAll('.pool').forEach(p=>p.classList.remove('drag-over'));
+  if(!mdP||mdF===target){mdP=null;return}
+  if(mdF==='t1')S.match.t1.players=S.match.t1.players.filter(p=>p!==mdP);
+  else if(mdF==='t2')S.match.t2.players=S.match.t2.players.filter(p=>p!==mdP);
+  const fmt=S.match.fmt;
+  if(target==='t1'){if(S.match.t1.players.length<fmt)S.match.t1.players.push(mdP);else toast(`⚠️ T1 doldu`,1)}
+  else if(target==='t2'){if(S.match.t2.players.length<fmt)S.match.t2.players.push(mdP);else toast(`⚠️ T2 doldu`,1)}
+  mdP=null;save();renderMatchPools();
+}
+
+function renderMatchPools(){
+  const attending=Object.entries(S.match.rsvp).filter(([,v])=>v==='yes').map(([k])=>k);
+  const ass=[...S.match.t1.players,...S.match.t2.players];
+  const pool=attending.filter(n=>!ass.includes(n));
+  const mkMD=(name,from)=>`<div class="dragp" draggable="true" data-n="${name}" data-f="${from}" ondragstart="mds(event)" ondragend="de(event)">⠿ ${name}</div>`;
+  const pl=document.getElementById('matchPoolL');const t1=document.getElementById('matchT1L');const t2=document.getElementById('matchT2L');
+  if(pl)pl.innerHTML=pool.map(n=>mkMD(n,'pool')).join('');
+  if(t1)t1.innerHTML=S.match.t1.players.map(n=>mkMD(n,'t1')).join('');
+  if(t2)t2.innerHTML=S.match.t2.players.map(n=>mkMD(n,'t2')).join('');
+  const lbl1=document.getElementById('mt1lbl');const lbl2=document.getElementById('mt2lbl');
+  if(lbl1)lbl1.textContent=`🔴 ${S.match.t1.name} (${S.match.t1.players.length}/${S.match.fmt})`;
+  if(lbl2)lbl2.textContent=`⚪ ${S.match.t2.name} (${S.match.t2.players.length}/${S.match.fmt})`;
+}
+
+function mds(e){mdP=e.target.dataset.n;mdF=e.target.dataset.f;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+
+function autoMatchAssign(){
+  const attending=Object.entries(S.match.rsvp).filter(([,v])=>v==='yes').map(([k])=>k);
+  S.match.t1.players=[];S.match.t2.players=[];
+  const sh=[...attending].sort(()=>Math.random()-.5);
+  sh.forEach((n,i)=>{if(i<S.match.fmt)S.match.t1.players.push(n);else if(i<S.match.fmt*2)S.match.t2.players.push(n)});
+  save();renderMatchPools();toast('🎲 Otomatik dağıtıldı');
+}
+function clearMatchTeams(){S.match.t1.players=[];S.match.t2.players=[];save();renderMatchPools();}
+
+// --- SON MESAJ ---
+function buildFinalMsg(name,tNum){
+  const m=S.match;
+  const team=m['t'+tNum],other=m['t'+(tNum===1?2:1)];
+  const e1=tNum===1?'🔴':'⚪',e2=tNum===1?'⚪':'🔴';
+  return `⚽ *KADRO AÇIKLANDI!*\n\n📅 *${m.day}${m.date?' · '+fmtDate(m.date):''}*\n🕐 *${m.time}*\n🏟 *${m.venue}*\n\n━━━━━━━━━━━━━━\n${e1} *${team.name}*\n${team.players.map((p,i)=>`  ${i+1}. ${p}${i===0?' (KL)':''}`).join('\n')}\n\n${e2} *${other.name}*\n${other.players.map((p,i)=>`  ${i+1}. ${p}${i===0?' (KL)':''}`).join('\n')}\n━━━━━━━━━━━━━━\n\n${e1} Sen *${team.name}*'ndesin!\nSaha görüşmek dileğiyle ⚽💪`;
+}
+
+function renderFinalList(){
+  const list=document.getElementById('finalWaList');if(!list)return;
+  const all=[...S.match.t1.players.map(p=>({p,t:1})),...S.match.t2.players.map(p=>({p,t:2}))];
+  list.innerHTML=all.map(({p,t})=>{
+    const m=S.members.find(x=>x.name===p);
+    return `<div class="warow"><div><div style="font-weight:600">${p}</div><div style="font-size:11px;color:var(--muted)">${S.match['t'+t].name} · ${m&&m.phone?fp(m.phone):'📵 Yok'}</div></div>${m&&m.phone?`<button class="wabtn" onclick="sendFinalOne('${m.phone}',${t},'${p}')">Gönder</button>`:'<span style="color:var(--muted);font-size:11px">—</span>'}</div>`;
+  }).join('');
+}
+
+function sendFinalOne(phone,t,name){window.open(`https://wa.me/${phone}?text=${encodeURIComponent(buildFinalMsg(name,t))}`,'_blank')}
+
+function sendFinalAll(){
+  const all=[...S.match.t1.players.map(p=>({p,t:1})),...S.match.t2.players.map(p=>({p,t:2}))];
+  let i=0;const go=()=>{
+    if(i>=all.length){toast('📲 Kadrolar gönderiliyor');return}
+    const{p,t}=all[i];const m=S.members.find(x=>x.name===p);
+    if(m&&m.phone)window.open(`https://wa.me/${m.phone}?text=${encodeURIComponent(buildFinalMsg(p,t))}`,'_blank');
+    i++;setTimeout(go,750);
+  };go();
+}
+
+function finishMatch(){
+  // Sahaya aktar
+  S.venue=S.match.venue;S.day=S.match.day;S.time=S.match.time;S.fmt=S.match.fmt;
+  S.t1={...S.t1,...S.match.t1};S.t2={...S.t2,...S.match.t2};
+  S.match={id:null};save();
+  toast('🏁 Maç bilgileri sahaya aktarıldı!');
+  setTimeout(()=>gp('field'),800);
+}
+
+// ================================================================
+// DAVETİYE SAYFASI (URL param kontrolü)
+// ================================================================
+function checkInviteParam(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('invite')!=='1')return;
+  // Davet sayfasını göster
+  document.querySelector('nav').style.display='none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const invPage=document.getElementById('page-invite');
+  invPage.style.display='flex';invPage.classList.add('active');
+
+  const venue=params.get('venue')||'Halı Saha';
+  const day=params.get('day')||'';
+  const date=params.get('date')||'';
+  const time=params.get('time')||'';
+  const fmt=params.get('fmt')||'6';
+  const orgPhone=params.get('org')||'';
+  const players=(params.get('players')||'').split('|').filter(Boolean);
+  const mid=params.get('mid')||'';
+
+  document.getElementById('invSubtitle').textContent=`${venue} · ${day}${date?' · '+fmtDate(date):''}`;
+  document.getElementById('invDetails').innerHTML=`
+    <div class="invite-detail-row"><span class="invite-detail-icon">🏟️</span><strong>${venue}</strong></div>
+    <div class="invite-detail-row"><span class="invite-detail-icon">📅</span><strong>${day}${date?' · '+fmtDate(date):''}</strong></div>
+    <div class="invite-detail-row"><span class="invite-detail-icon">🕐</span><strong>${time}</strong></div>
+    <div class="invite-detail-row"><span class="invite-detail-icon">👥</span><strong>${fmt}v${fmt} Halı Saha</strong></div>
+  `;
+
+  const sel=document.getElementById('invNameSel');
+  players.forEach(name=>{const opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.appendChild(opt)});
+
+  // Store invite context for rsvp buttons
+  window._invCtx={orgPhone,mid,venue,day,date,time,fmt};
+}
+
+function rsvpYes(){
+  const name=document.getElementById('invNameSel').value;
+  if(!name){toast('⚠️ Önce adını seç',1);return}
+  const ctx=window._invCtx||{};
+  const msg=`✅ *KATILIYORUM!*\n\nMerhaba! Ben *${name}*.\n\n📅 ${ctx.day||''} ${ctx.date?fmtDate(ctx.date):''} ${ctx.time||''} saatindeki ${ctx.venue||'halı saha'} maçına *katılabilirim*! ⚽`;
+  if(ctx.orgPhone){
+    window.open(`https://wa.me/${ctx.orgPhone}?text=${encodeURIComponent(msg)}`,'_blank');
+    document.getElementById('invSent').style.display='block';
+    document.getElementById('invSent').textContent='✅ WhatsApp açılıyor... Mesajı gönder!';
+  }else{
+    navigator.clipboard.writeText(msg).catch(()=>{});
+    alert('Organizatör numarası bulunamadı. Bu mesajı organizatöre ilet:\n\n'+msg);
+  }
+}
+
+function rsvpNo(){
+  const name=document.getElementById('invNameSel').value;
+  if(!name){toast('⚠️ Önce adını seç',1);return}
+  const ctx=window._invCtx||{};
+  const msg=`❌ *KATÍLAMIYORUM*\n\nMerhaba! Ben *${name}*.\n\n${ctx.day||''} ${ctx.date?fmtDate(ctx.date):''} maçına maalesef *katılamıyorum*. Bir sonrakinde görüşürüz! ⚽`;
+  if(ctx.orgPhone){
+    window.open(`https://wa.me/${ctx.orgPhone}?text=${encodeURIComponent(msg)}`,'_blank');
+    document.getElementById('invSent').style.display='block';
+    document.getElementById('invSent').textContent='Mesajın iletildi. Görüşürüz!';
+  }else{
+    alert('Bu mesajı organizatöre ilet:\n\n'+msg);
+  }
+}
+
+// ================================================================
+// MEMBERS
+// ================================================================
+function rMem(){
+  const g=document.getElementById('mg');
+  g.innerHTML=S.members.length?S.members.map(m=>`<div class="mc"><div class="av">${m.name.charAt(0)}</div><div style="flex:1;min-width:0"><div class="mn">${m.name}</div><div class="mp">${fp(m.phone)}</div></div><div style="display:flex;flex-direction:column;gap:3px"><div class="ib" onclick="editM(${m.id})">✏️</div><div class="ib dl" onclick="delM(${m.id})">🗑</div></div></div>`).join(''):'<div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">Henüz oyuncu yok</div>';
+}
+function fp(p){if(!p)return'—';return p.replace(/(\d{2,3})(\d{3})(\d{3})(\d{4})$/,'+$1 $2 $3 $4')}
+function openAddM(){
+  if(!S.admin){toast('⚠️ Yetkili girişi gerekli',1);om('mAdmin');return}
+  document.getElementById('mN').value='';document.getElementById('mP').value='';
+  document.getElementById('ammTtl').textContent='👤 Oyuncu Ekle';
+  document.getElementById('ammBtn').onclick=addM;om('mAddM');
+}
+function addM(){
+  const n=document.getElementById('mN').value.trim();const p=document.getElementById('mP').value.trim();
+  if(!n){toast('❌ İsim gerekli',1);return}
+  S.members.push({id:Date.now(),name:n,phone:p});save();cm('mAddM');rMem();toast('✅ Oyuncu eklendi');
+}
+function delM(id){
+  if(!S.admin){toast('⚠️ Yetkili gerekli',1);return}
+  const m=S.members.find(x=>x.id===id);
+  if(m){S.t1.players=S.t1.players.filter(p=>p!==m.name);S.t2.players=S.t2.players.filter(p=>p!==m.name)}
+  S.members=S.members.filter(x=>x.id!==id);save();rMem();toast('🗑 Silindi');
+}
+function editM(id){
+  if(!S.admin){toast('⚠️ Yetkili gerekli',1);return}
+  const m=S.members.find(x=>x.id===id);if(!m)return;
+  document.getElementById('mN').value=m.name;document.getElementById('mP').value=m.phone;
+  document.getElementById('ammTtl').textContent='✏️ Düzenle';
+  document.getElementById('ammBtn').onclick=()=>{m.name=document.getElementById('mN').value.trim()||m.name;m.phone=document.getElementById('mP').value.trim();save();cm('mAddM');rMem();toast('✅ Güncellendi')};
+  om('mAddM');
+}
+async function pickContact(){
+  if(!S.admin){toast('⚠️ Yetkili girişi gerekli',1);om('mAdmin');return}
+  if('contacts' in navigator&&'select' in navigator.contacts){
+    try{
+      const cs=await navigator.contacts.select(['name','tel'],{multiple:true});let added=0;
+      cs.forEach(c=>{const name=(c.name&&c.name[0])||'İsimsiz';const phone=(c.tel&&c.tel[0]||'').replace(/\D/g,'');if(!S.members.find(m=>m.name===name)){S.members.push({id:Date.now()+Math.random(),name,phone});added++}});
+      save();rMem();toast(`✅ ${added} oyuncu eklendi`);
+    }catch(e){toast('❌ İptal edildi',1)}
+  }else{toast('📱 Bu cihazda rehber API yok',1);openAddM()}
+}
+
+// ================================================================
+// WHATSAPP (kadro sayfası)
+// ================================================================
+function openShare(){
+  const all=[...S.t1.players,...S.t2.players];if(!all.length){toast('⚠️ Önce oyuncu ata',1);return}
+  const list=document.getElementById('wal');list.innerHTML='';
+  const mkr=(name,t)=>{const m=S.members.find(x=>x.name===name);const d=document.createElement('div');d.className='warow';d.innerHTML=`<div><div style="font-weight:600">${name}</div><div style="font-size:11px;color:var(--muted)">${S['t'+t].name} · ${m&&m.phone?fp(m.phone):'📵 Yok'}</div></div>${m&&m.phone?`<button class="wabtn" onclick="s1('${m.phone}',${t},'${name}')">Gönder</button>`:'<span style="color:var(--muted);font-size:11px">—</span>'}`;list.appendChild(d)};
+  S.t1.players.forEach(p=>mkr(p,1));S.t2.players.forEach(p=>mkr(p,2));om('mShare');
+}
+function bMsg(name,t){const team=S['t'+t],other=S['t'+(t===1?2:1)];const e1=t===1?'🔴':'⚪',e2=t===1?'⚪':'🔴';return `⚽ *HALI SAHA MAÇI*\n\n📅 *${S.day}*\n🕐 *${S.time}*\n🏟 *${S.venue||'Halı Saha'}*\n\n━━━━━━━━━━━━━━\n${e1} *${team.name}*\n${team.players.map((p,i)=>`  ${i+1}. ${p}${i===0?' (KL)':''}`).join('\n')}\n\n${e2} *${other.name}*\n${other.players.map((p,i)=>`  ${i+1}. ${p}${i===0?' (KL)':''}`).join('\n')}\n━━━━━━━━━━━━━━\n\n${e1} Sen *${team.name}*'ndesin! 💪`}
+function s1(phone,t,name){window.open(`https://wa.me/${phone}?text=${encodeURIComponent(bMsg(name,t))}`,'_blank')}
+function sendAll(){const all=[...S.t1.players.map(p=>({p,t:1})),...S.t2.players.map(p=>({p,t:2}))];let i=0;const go=()=>{if(i>=all.length){toast('📲 Gönderiliyor');return}const{p,t}=all[i];const m=S.members.find(x=>x.name===p);if(m&&m.phone)window.open(`https://wa.me/${m.phone}?text=${encodeURIComponent(bMsg(p,t))}`,'_blank');i++;setTimeout(go,750)};go()}
+
+// ================================================================
+// TOURNAMENT
+// ================================================================
+function rTourn(){
+  const wrap=document.getElementById('tcont');
+  if(!S.tourn){wrap.innerHTML=`<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🏆</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px">Henüz Turnuva Yok</div></div>`;return}
+  const T=S.tourn;let h=`<div style="margin-bottom:12px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold)">🏆 ${T.name}</div><div class="tbr">`;
+  T.rounds.forEach((round,ri)=>{const n=round.length;const lbl=n===1?'Final':n===2?'Yarı Final':n===4?'Çeyrek Final':`Tur ${ri+1}`;h+=`<div class="trd"><div class="rlbl">${lbl}</div>`;round.forEach((m,mi)=>{h+=`<div class="tmatch"><div class="trow ${m.w===1?'twin':''}"><span>${m.w===1?'👑 ':''}${m.t1}</span><span class="tscore" onclick="setSc(${ri},${mi},1)">${m.s1!==null?m.s1:'—'}</span></div><div class="trow ${m.w===2?'twin':''}"><span>${m.w===2?'👑 ':''}${m.t2}</span><span class="tscore" onclick="setSc(${ri},${mi},2)">${m.s2!==null?m.s2:'—'}</span></div></div>`});h+=`</div>`});h+=`</div>`;
+  const last=T.rounds[T.rounds.length-1];const done=last.every(m=>m.w!==null);
+  if(done&&last.length>1)h+=`<button class="btn bgold" style="margin-top:12px" onclick="nextR()">➡️ Sonraki Tur</button>`;
+  else if(done&&last.length===1){const ch=last[0].w===1?last[0].t1:last[0].t2;h+=`<div style="text-align:center;padding:22px;background:var(--card);border-radius:11px;margin-top:12px;border:1px solid var(--gold)"><div style="font-size:40px">🥇</div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--gold)">${ch}</div><div style="color:var(--muted);font-size:13px;margin-top:4px">ŞAMPİYON!</div></div>`}
+  h+=`<button class="btn bred bsm" style="margin-top:9px" onclick="if(confirm('Sıfırla?')){S.tourn=null;save();rTourn()}">🗑 Sıfırla</button>`;wrap.innerHTML=h;
+}
+function openTS(){if(!S.admin){toast('⚠️ Yetkili gerekli',1);om('mAdmin');return}document.getElementById('tN').value='';btInputs();document.getElementById('tC').onchange=btInputs;om('mTourn')}
+function btInputs(){const n=parseInt(document.getElementById('tC').value);document.getElementById('tInputs').innerHTML=Array.from({length:n},(_,i)=>`<div style="margin-bottom:6px"><label class="lbl">Takım ${i+1}</label><input class="inp" id="tt${i}" value="Takım ${i+1}" style="margin-bottom:0"/></div>`).join('')}
+function createT(){const name=document.getElementById('tN').value||'Turnuva';const n=parseInt(document.getElementById('tC').value);const teams=Array.from({length:n},(_,i)=>document.getElementById('tt'+i).value||`Takım ${i+1}`);const sh=[...teams].sort(()=>Math.random()-.5);const matches=[];for(let i=0;i<sh.length;i+=2)matches.push({t1:sh[i],t2:sh[i+1]||'BYE',s1:null,s2:null,w:null});S.tourn={name,rounds:[matches]};save();cm('mTourn');rTourn();toast('🏆 Turnuva oluşturuldu!')}
+function setSc(ri,mi,t){const s=prompt(`${S.tourn.rounds[ri][mi]['t'+t]} skoru:`);if(s===null)return;const n=parseInt(s);if(isNaN(n)||n<0){toast('❌ Geçersiz',1);return}S.tourn.rounds[ri][mi]['s'+t]=n;const m=S.tourn.rounds[ri][mi];if(m.s1!==null&&m.s2!==null)m.w=m.s1>m.s2?1:m.s2>m.s1?2:null;save();rTourn()}
+function nextR(){const last=S.tourn.rounds[S.tourn.rounds.length-1];const w=last.map(m=>m.w===1?m.t1:m.t2);const nm=[];for(let i=0;i<w.length;i+=2)nm.push({t1:w[i],t2:w[i+1]||'BYE',s1:null,s2:null,w:null});S.tourn.rounds.push(nm);save();rTourn()}
+
+// ================================================================
+// UTILS
+// ================================================================
+function isl(hex){if(!hex||hex.length<4)return false;const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(r*299+g*587+b*114)/1000>148}
+function om(id){document.getElementById(id).classList.add('open')}
+function cm(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+function toast(msg,err=0){const t=document.getElementById('tst');t.textContent=msg;t.style.background=err?'var(--red)':'var(--acc)';t.style.color=err?'#fff':'#080f0a';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+function fmtDate(d){if(!d)return'';try{const dt=new Date(d);return dt.toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}catch(e){return d}}
+
+// ================================================================
+// INIT
+// ================================================================
+load();
+checkInviteParam();
+if(!document.getElementById('page-invite').classList.contains('active')){
+  rf();btInputs();
+}
+</script>
+</body>
+</html>
