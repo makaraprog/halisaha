@@ -474,6 +474,24 @@ input[type=color]{width:28px;height:24px;border-radius:5px;border:none;cursor:po
       </div>
     </div>
   </div>
+  <div class="sec" style="margin-top:14px">
+    <div class="stitle">🔐 Yetkili Şifresi</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px">
+        <label class="lbl">Mevcut Şifre</label>
+        <input class="inp" id="curPass" type="password" placeholder="Mevcut şifre" style="margin-bottom:0">
+      </div>
+      <div style="flex:1;min-width:150px">
+        <label class="lbl">Yeni Şifre</label>
+        <input class="inp" id="newPass" type="password" placeholder="Yeni şifre" style="margin-bottom:0">
+      </div>
+      <div style="flex:1;min-width:150px">
+        <label class="lbl">Tekrar</label>
+        <input class="inp" id="newPass2" type="password" placeholder="Yeni şifre tekrar" style="margin-bottom:0">
+      </div>
+      <button class="btn bgold bsm" onclick="changePass()" style="margin-bottom:0;white-space:nowrap">🔑 Şifreyi Güncelle</button>
+    </div>
+  </div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
     <button class="btn bghost" onclick="gp('field')">İptal</button>
     <button class="btn bg" onclick="sv()">✅ Kaydet</button>
@@ -836,6 +854,22 @@ function pc(t,el){document.querySelectorAll(`#c${t} .csw`).forEach(s=>s.classLis
 function cc(t,el){S['t'+t].color=el.value;document.querySelectorAll(`#c${t} .csw`).forEach(s=>s.classList.remove('on'))}
 function pgk(t,el){document.querySelectorAll(`#gk${t} .csw`).forEach(s=>s.classList.remove('on'));el.classList.add('on');S['t'+t].gkColor=el.dataset.c}
 function cgk(t,el){S['t'+t].gkColor=el.value;document.querySelectorAll(`#gk${t} .csw`).forEach(s=>s.classList.remove('on'))}
+function changePass(){
+  if(!S.admin){toast('⚠️ Önce yetkili girişi yap',1);return;}
+  const cur=document.getElementById('curPass').value;
+  const np=document.getElementById('newPass').value.trim();
+  const np2=document.getElementById('newPass2').value.trim();
+  if(cur!==S.pass){toast('❌ Mevcut şifre yanlış',1);return;}
+  if(!np){toast('❌ Yeni şifre boş olamaz',1);return;}
+  if(np!==np2){toast('❌ Şifreler eşleşmiyor',1);return;}
+  if(np.length<3){toast('❌ En az 3 karakter olmalı',1);return;}
+  S.pass=np;save();
+  document.getElementById('curPass').value='';
+  document.getElementById('newPass').value='';
+  document.getElementById('newPass2').value='';
+  toast('✅ Şifre güncellendi!');
+}
+
 function sv(){
   S.venue=document.getElementById('sV').value||'Halı Saha';S.day=document.getElementById('sD').value;
   S.time=document.getElementById('sT').value;S.fmt=parseInt(document.getElementById('sF').value);
@@ -863,10 +897,15 @@ function createMatch(){
   const time=document.getElementById('nmTime').value;
   const fmt=parseInt(document.getElementById('nmFmt').value);
   const phone=document.getElementById('nmPhone').value.trim();
+  // Mevcut maç varsa bilgilerini güncelle, yoksa yenisi
+  const existingId = S.match && S.match.id ? S.match.id : Date.now().toString(36);
+  const existingInvited = S.match && S.match.invited ? S.match.invited : [];
+  const existingRsvp = S.match && S.match.rsvp ? S.match.rsvp : {};
+  const existingStep = S.match && S.match.step > 1 ? S.match.step : 2;
   S.match={
-    id: Date.now().toString(36),
+    id: existingId,
     venue,day,date,time,fmt,orgPhone:phone,
-    invited:[],rsvp:{},step:2,
+    invited:existingInvited,rsvp:existingRsvp,step:existingStep,
     t1:{name:S.t1.name,color:S.t1.color,gkColor:S.t1.gkColor,players:[]},
     t2:{name:S.t2.name,color:S.t2.color,gkColor:S.t2.gkColor,players:[]},
   };
@@ -930,6 +969,7 @@ function rOrg(){
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             Seçilenlere Davet Gönder
           </button>
+          <button class="btn bghost bsm" onclick="advanceStep(1)">← Maç Bilgisine Dön</button>
           <button class="btn bg" onclick="advanceStep(3)" style="flex:0">Katılım Takibine Geç ➜</button>
         </div>
       </div>
@@ -947,7 +987,10 @@ function rOrg(){
         <span class="attending-count">✅ Katılıyor: ${yesCount}</span>
         <span style="font-size:13px;color:var(--muted)">❌ ${noCount} · ⏳ ${pendCount}</span>
       </div>
-      ${yesCount>=4?`<button class="btn bg" onclick="advanceStep(4)" style="margin-top:12px">Kadro Kurmaya Geç ➜</button>`:`<div style="font-size:12px;color:var(--muted);margin-top:10px">⚠️ Kadro kurmak için en az 4 katılımcı gerekli.</div>`}
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn bghost bsm" onclick="advanceStep(2)">← Davete Dön</button>
+        ${yesCount>=4?`<button class="btn bg bsm" onclick="advanceStep(4)">Kadro Kurmaya Geç ➜</button>`:`<span style="font-size:12px;color:var(--muted)">⚠️ En az 4 katılımcı gerekli.</span>`}
+      </div>
     </div>`;
     html+=`<script>setTimeout(renderRsvpList,50)<\/script>`;
   }
@@ -964,8 +1007,10 @@ function rOrg(){
         <div class="pool" id="matchT2" ondragover="dov(event)" ondrop="mdrop(event,'t2')"><div class="pttl" id="mt2lbl">⚪ ${m.t2.name}</div><div id="matchT2L"></div></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap">
+        <button class="btn bghost bsm" onclick="advanceStep(3)">← Katılıma Dön</button>
         <button class="btn bghost bsm" onclick="autoMatchAssign()">🎲 Otomatik Dağıt</button>
         <button class="btn bghost bsm" onclick="clearMatchTeams()">🗑 Temizle</button>
+        <button class="btn bghost bsm" onclick="addBotToPool()">🤖 Bot Ekle</button>
         <button class="btn bg bsm" onclick="advanceStep(5)" style="margin-left:auto">Kadroyu Gönder ➜</button>
       </div>
     </div>`;
@@ -992,6 +1037,18 @@ function rOrg(){
 }
 
 function advanceStep(n){
+  if(n===1){
+    // Geri → maç bilgisi düzenle
+    if(!S.admin){toast('⚠️ Yetkili girişi gerekli',1);om('mAdmin');return;}
+    document.getElementById('nmVenue').value=S.match.venue||'';
+    document.getElementById('nmDay').value=S.match.day||'Cumartesi';
+    document.getElementById('nmDate').value=S.match.date||'';
+    document.getElementById('nmTime').value=S.match.time||'20:00';
+    document.getElementById('nmFmt').value=S.match.fmt||6;
+    document.getElementById('nmPhone').value=S.match.orgPhone||'';
+    om('mNewMatch');
+    return;
+  }
   S.match.step=n;save();rOrg();
 }
 
@@ -1108,7 +1165,11 @@ function renderMatchPools(){
   const attending=Object.entries(S.match.rsvp).filter(([,v])=>v==='yes').map(([k])=>k);
   const ass=[...S.match.t1.players,...S.match.t2.players];
   const pool=attending.filter(n=>!ass.includes(n));
-  const mkMD=(name,from)=>`<div class="dragp" draggable="true" data-n="${name}" data-f="${from}" ondragstart="mds(event)" ondragend="de(event)">⠿ ${name}</div>`;
+  const mkMD=(name,from)=>{
+    const isBot=name.startsWith('🤖');
+    const delBtn=isBot?`<span onclick="event.stopPropagation();removeBotFromPool('${name}')" style="margin-left:auto;cursor:pointer;color:var(--red);font-size:11px">✕</span>`:'';
+    return `<div class="dragp" draggable="true" data-n="${name}" data-f="${from}" ondragstart="mds(event)" ondragend="de(event)">${isBot?'':'⠿ '}${name}${delBtn}</div>`;
+  };
   const pl=document.getElementById('matchPoolL');const t1=document.getElementById('matchT1L');const t2=document.getElementById('matchT2L');
   if(pl)pl.innerHTML=pool.map(n=>mkMD(n,'pool')).join('');
   if(t1)t1.innerHTML=S.match.t1.players.map(n=>mkMD(n,'t1')).join('');
@@ -1119,6 +1180,24 @@ function renderMatchPools(){
 }
 
 function mds(e){mdP=e.target.dataset.n;mdF=e.target.dataset.f;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+
+function addBotToPool(){
+  const num = Object.keys(S.match.rsvp).filter(k=>k.startsWith('🤖 Bot')).length + 1;
+  const botName = '🤖 Bot ' + num;
+  S.match.rsvp[botName] = 'yes';
+  if(!S.match.invited.some(x=>x.name===botName)){
+    S.match.invited.push({name:botName,phone:''});
+  }
+  save();renderMatchPools();toast('🤖 Bot '+num+' havuza eklendi');
+}
+
+function removeBotFromPool(name){
+  delete S.match.rsvp[name];
+  S.match.invited = S.match.invited.filter(x=>x.name!==name);
+  S.match.t1.players = S.match.t1.players.filter(p=>p!==name);
+  S.match.t2.players = S.match.t2.players.filter(p=>p!==name);
+  save();renderMatchPools();toast('🤖 '+name+' silindi');
+}
 
 function autoMatchAssign(){
   const attending=Object.entries(S.match.rsvp).filter(([,v])=>v==='yes').map(([k])=>k);
